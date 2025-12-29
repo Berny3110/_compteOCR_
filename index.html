@@ -294,6 +294,10 @@
 
         // Upload du fichier
         async function uploadFile() {
+						console.log("currentFile =", currentFile);
+						console.log("type =", currentFile?.type);
+						console.log("size =", currentFile?.size);
+
             if (!currentFile) {
                 showStatus('Aucune photo à envoyer.', 'error');
                 return;
