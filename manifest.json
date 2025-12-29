@@ -1,8 +1,10 @@
 {
   "name": "Capture Factures",
+	"id": "/factures/",
+	"lang": "fr-FR",
   "short_name": "Factures",
   "description": "Application de capture et upload de factures",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#2563eb",
