@@ -1,6 +1,6 @@
 {
   "name": "Capture Factures",
-	"id": "/factures/",
+	"id": "/",
 	"lang": "fr-FR",
   "short_name": "Factures",
   "description": "Application de capture et upload de factures",

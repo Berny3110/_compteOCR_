@@ -1,9 +1,9 @@
 const CACHE_NAME = 'factures-pwa-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-	'./style.css',
+  './',
+  './index.html',
+  './manifest.json',
+  './style.css',
   './app.js'
 ];
 
@@ -12,21 +12,21 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Cache ouvert');
+        console.log('Cache : Mise en cache des ressources critiques');
         return cache.addAll(urlsToCache);
       })
   );
   self.skipWaiting();
 });
 
-// Activation du Service Worker
+// Activation : Nettoyage des anciens caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Suppression ancien cache:', cacheName);
+            console.log('Cache : Suppression de l\'ancien cache', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -36,72 +36,42 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Interception des requêtes
+// Interception des requêtes (Stratégie : Cache First, then Network)
 self.addEventListener('fetch', (event) => {
-  // Ne pas mettre en cache les requêtes POST (uploads)
+  // On ne met jamais en cache les requêtes POST (Uploads)
   if (event.request.method === 'POST') {
-    return fetch(event.request);
+    return; 
   }
 
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Retourne depuis le cache si disponible
         if (response) {
           return response;
         }
 
-        // Sinon, fetch depuis le réseau
-        return fetch(event.request).then((response) => {
-          // Ne pas mettre en cache les réponses invalides
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+        return fetch(event.request).then((networkResponse) => {
+          // On ne met en cache que les réponses valides
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+            return networkResponse;
           }
 
-          // Clone la réponse
-          const responseToCache = response.clone();
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
 
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
+          return networkResponse;
         });
       })
   );
 });
 
-// Synchronisation en arrière-plan (Background Sync)
+// Gestion de la synchronisation en arrière-plan
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-uploads') {
-    event.waitUntil(syncUploads());
+    console.log('Sync : Tentative de synchronisation détectée');
+    // Note : localStorage n'est pas accessible ici. 
+    // Il faudra migrer vers IndexedDB pour une vraie gestion hors-ligne.
   }
 });
-
-// Fonction de synchronisation des uploads
-// Remplacez la fonction existante par celle-ci pour corriger le crash
-async function syncUploads() {
-  console.log("La synchronisation a été déclenchée, mais localStorage n'est pas accessible ici.");
-  // Note: Pour que cela fonctionne, il faudrait utiliser IndexedDB à la place de localStorage
-}
-```
-
-## 🚀 **Instructions d'installation**
-
-### 1. **Structure des fichiers**
-```
-factures-pwa/
-│
-├── index.html
-├── manifest.json
-├── service-worker.js
-└── icons/
-    ├── icon-72x72.png
-    ├── icon-96x96.png
-    ├── icon-128x128.png
-    ├── icon-144x144.png
-    ├── icon-152x152.png
-    ├── icon-192x192.png
-    ├── icon-384x384.png
-    └── icon-512x512.png
